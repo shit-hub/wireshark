@@ -652,11 +652,19 @@ static int   hf_eap_ext_vendor_type = -1;
 
 static const value_string eap_ext_vendor_id_vals[] = {
   { WFA_VENDOR_ID, "WFA" },
+  { 10415, "3GPP" },
+  { 32902, "Verizon" },
+  { 12951, "Verizonwireless" },
+  { 2011, "Huawei" },
+  { 20858, "Casa-systems" },
   { 0, NULL }
 };
 
 static const value_string eap_ext_vendor_type_vals[] = {
   { WFA_SIMPLECONFIG_TYPE, "SimpleConfig" },
+  { 1, "EAP-LWA" },
+  { 2, "EAP-3GPP-LimitedService" },
+  { 3, "EAP-5G" },
   { 0, NULL }
 };
 

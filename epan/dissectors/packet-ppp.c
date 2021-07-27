@@ -264,7 +264,8 @@ static gint ett_vsncp_ipv6_hsgw_lla_iid_opt = -1;
 static dissector_table_t vsncp_option_table;
 
 static int proto_vsnp = -1;
-static gint hf_vsnp_pdnid = -1;
+static gint hf_vsnp_type = -1;
+static gint hf_vsnp_length = -1;
 
 static gint ett_vsnp =-1;
 
@@ -4863,23 +4864,23 @@ dissect_vsnp(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void* data _U_
 {
     proto_item *vsnp_item;
     proto_tree *vsnp_tree;
-    tvbuff_t *next_tvb;
+    // tvbuff_t *next_tvb;
 
     col_set_str(pinfo->cinfo, COL_PROTOCOL, "VSNP");
 
     vsnp_item = proto_tree_add_item(tree, proto_vsnp, tvb, 0, -1, ENC_NA);
     vsnp_tree = proto_item_add_subtree(vsnp_item, ett_vsnp);
-    proto_tree_add_item(vsnp_tree, hf_vsnp_pdnid, tvb, 0, 1,
-            ENC_BIG_ENDIAN);
+    proto_tree_add_item(vsnp_tree, hf_vsnp_type, tvb, 0, 2, ENC_BIG_ENDIAN);
+    proto_tree_add_item(vsnp_tree, hf_vsnp_length, tvb, 0, 2, ENC_BIG_ENDIAN);
 
-    next_tvb = tvb_new_subset_remaining(tvb, 1);
-    if (!dissector_try_uint(ppp_subdissector_table, PPP_IP, next_tvb, pinfo,
-        tree)) {
-        col_add_fstr(pinfo->cinfo, COL_PROTOCOL, "0x%04x", PPP_IP);
-        col_add_fstr(pinfo->cinfo, COL_INFO, "PPP %s (0x%04x)",
-            val_to_str_ext_const(PPP_IP, &ppp_vals_ext, "Unknown"), PPP_IP);
-        call_data_dissector(next_tvb, pinfo, tree);
-    }
+    // next_tvb = tvb_new_subset_remaining(tvb, 1);
+    // if (!dissector_try_uint(ppp_subdissector_table, PPP_IP, next_tvb, pinfo,
+    //     tree)) {
+    //     col_add_fstr(pinfo->cinfo, COL_PROTOCOL, "0x%04x", PPP_IP);
+    //     col_add_fstr(pinfo->cinfo, COL_INFO, "PPP %s (0x%04x)",
+    //         val_to_str_ext_const(PPP_IP, &ppp_vals_ext, "Unknown"), PPP_IP);
+    //     call_data_dissector(next_tvb, pinfo, tree);
+    // }
     return tvb_captured_length(tvb);
 }
 
@@ -7057,6 +7058,13 @@ proto_reg_handoff_vsncp(void)
     dissector_add_uint("vsncp.option", CI_IPv6_HSGW_LLA_IID, create_dissector_handle( dissect_vsncp_ipv6_hsgw_lla_iid_opt, proto_vsncp_option_ipv6_hsgw_lla_iid ));
 }
 
+static const value_string vsnp_type_vals[] = {
+  { 0, "NAS" },
+  { 1, "AS Subscription Parameters" },
+  { 2, "AS Session Parameters" },
+  { 3, "AS ACK" }
+};
+
 void
 proto_register_vsnp(void)
 {
@@ -7065,9 +7073,12 @@ proto_register_vsnp(void)
     };
 
     static hf_register_info hf[] = {
-        { &hf_vsnp_pdnid,
-            { "PDN ID", "vsnp.pdnid", FT_UINT8, BASE_HEX,
-                NULL, 0x0, NULL, HFILL }}
+        { &hf_vsnp_type,
+            { "Type", "vsnp.type", FT_UINT16, BASE_HEX,
+                VALS(vsnp_type_vals), 0x0, NULL, HFILL }},
+        { &hf_vsnp_length,
+            { "Length", "vsnp.length", FT_UINT16, BASE_HEX,
+                NULL, 0x0, NULL, HFILL }},
     };
 
     proto_vsnp = proto_register_protocol("Vendor Specific Network Protocol",
